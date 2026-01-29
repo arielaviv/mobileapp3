@@ -18,18 +18,11 @@
     <string name="cancel">Cancel</string>
     <string name="save">Save</string>
 
-    <!-- Dialogs -->
-    <string name="success">Success</string>
-    <string name="student_saved_successfully">Student saved successfully</string>
-    <string name="ok">OK</string>
-    <string name="delete_confirmation_title">Delete Student</string>
     <string name="delete_confirmation_message">Are you sure you want to delete this student?</string>
 
     <!-- Student Details -->
     <string name="student_details_title">Student Details</string>
     <string name="edit">Edit</string>
-    <string name="checked_status">Status: Checked</string>
-    <string name="unchecked_status">Status: Not Checked</string>
 
     <!-- Edit Student -->
     <string name="edit_student_title">Edit Student</string>

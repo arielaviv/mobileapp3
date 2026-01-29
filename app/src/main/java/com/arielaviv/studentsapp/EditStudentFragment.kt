@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
@@ -21,14 +22,14 @@ import java.util.Calendar
 class EditStudentFragment : Fragment() {
 
     private lateinit var imageViewAvatar: ImageView
-    private lateinit var textInputLayoutName: TextInputLayout
-    private lateinit var textInputLayoutId: TextInputLayout
     private lateinit var editTextName: TextInputEditText
     private lateinit var editTextId: TextInputEditText
     private lateinit var editTextPhone: TextInputEditText
     private lateinit var editTextAddress: TextInputEditText
     private lateinit var editTextBirthDate: TextInputEditText
     private lateinit var editTextBirthTime: TextInputEditText
+    private lateinit var nameInputLayout: TextInputLayout
+    private lateinit var idInputLayout: TextInputLayout
     private lateinit var checkBoxChecked: CheckBox
     private lateinit var buttonCancel: Button
     private lateinit var buttonDelete: Button
@@ -50,15 +51,10 @@ class EditStudentFragment : Fragment() {
 
         originalStudentId = arguments?.getString("studentId")
 
-        initViews(view)
-        loadStudentData()
-        setupListeners()
-    }
-
-    private fun initViews(view: View) {
+        // bind views
         imageViewAvatar = view.findViewById(R.id.imageViewAvatar)
-        textInputLayoutName = view.findViewById(R.id.textInputLayoutName)
-        textInputLayoutId = view.findViewById(R.id.textInputLayoutId)
+        nameInputLayout = view.findViewById(R.id.textInputLayoutName)
+        idInputLayout = view.findViewById(R.id.textInputLayoutId)
         editTextName = view.findViewById(R.id.editTextName)
         editTextId = view.findViewById(R.id.editTextId)
         editTextPhone = view.findViewById(R.id.editTextPhone)
@@ -69,27 +65,28 @@ class EditStudentFragment : Fragment() {
         buttonCancel = view.findViewById(R.id.buttonCancel)
         buttonDelete = view.findViewById(R.id.buttonDelete)
         buttonSave = view.findViewById(R.id.buttonSave)
+
+        loadStudentData()
+        setupListeners()
     }
 
     private fun loadStudentData() {
         originalStudent = originalStudentId?.let { StudentRepository.getById(it) }
 
         if (originalStudent == null) {
-            // Student not found, return
             findNavController().popBackStack()
             return
         }
 
-        originalStudent?.let { student ->
-            imageViewAvatar.setImageResource(student.avatarResId)
-            editTextName.setText(student.name)
-            editTextId.setText(student.id)
-            editTextPhone.setText(student.phone)
-            editTextAddress.setText(student.address)
-            editTextBirthDate.setText(student.birthDate)
-            editTextBirthTime.setText(student.birthTime)
-            checkBoxChecked.isChecked = student.isChecked
-        }
+        val student = originalStudent!!
+        imageViewAvatar.setImageResource(student.avatarResId)
+        editTextName.setText(student.name)
+        editTextId.setText(student.id)
+        editTextPhone.setText(student.phone)
+        editTextAddress.setText(student.address)
+        editTextBirthDate.setText(student.birthDate)
+        editTextBirthTime.setText(student.birthTime)
+        checkBoxChecked.isChecked = student.isChecked
     }
 
     private fun setupListeners() {
@@ -107,19 +104,13 @@ class EditStudentFragment : Fragment() {
             }
         }
 
-        editTextBirthDate.setOnClickListener {
-            showDatePicker()
-        }
-
-        editTextBirthTime.setOnClickListener {
-            showTimePicker()
-        }
+        editTextBirthDate.setOnClickListener { showDatePicker() }
+        editTextBirthTime.setOnClickListener { showTimePicker() }
     }
 
     private fun showDatePicker() {
         val calendar = Calendar.getInstance()
 
-        // Try to parse existing date
         val existingDate = editTextBirthDate.text.toString()
         if (existingDate.isNotEmpty()) {
             val parts = existingDate.split("/")
@@ -130,11 +121,7 @@ class EditStudentFragment : Fragment() {
             }
         }
 
-        val year = calendar.get(Calendar.YEAR)
-        val month = calendar.get(Calendar.MONTH)
-        val day = calendar.get(Calendar.DAY_OF_MONTH)
-
-        val datePickerDialog = DatePickerDialog(
+        DatePickerDialog(
             requireContext(),
             { _, selectedYear, selectedMonth, selectedDay ->
                 val formattedDate = String.format(
@@ -145,17 +132,16 @@ class EditStudentFragment : Fragment() {
                 )
                 editTextBirthDate.setText(formattedDate)
             },
-            year,
-            month,
-            day
-        )
-        datePickerDialog.show()
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).show()
     }
 
     private fun showTimePicker() {
         val calendar = Calendar.getInstance()
 
-        // Try to parse existing time
+        // parse existing time if present
         val existingTime = editTextBirthTime.text.toString()
         if (existingTime.isNotEmpty()) {
             val parts = existingTime.split(":")
@@ -165,46 +151,38 @@ class EditStudentFragment : Fragment() {
             }
         }
 
-        val hour = calendar.get(Calendar.HOUR_OF_DAY)
-        val minute = calendar.get(Calendar.MINUTE)
-
-        val timePickerDialog = TimePickerDialog(
+        TimePickerDialog(
             requireContext(),
             { _, selectedHour, selectedMinute ->
-                val formattedTime = String.format("%02d:%02d", selectedHour, selectedMinute)
-                editTextBirthTime.setText(formattedTime)
+                editTextBirthTime.setText(String.format("%02d:%02d", selectedHour, selectedMinute))
             },
-            hour,
-            minute,
+            calendar.get(Calendar.HOUR_OF_DAY),
+            calendar.get(Calendar.MINUTE),
             true
-        )
-        timePickerDialog.show()
+        ).show()
     }
 
     private fun validateInput(): Boolean {
-        var isValid = true
-
         val name = editTextName.text.toString().trim()
         val id = editTextId.text.toString().trim()
 
         if (name.isEmpty()) {
-            textInputLayoutName.error = getString(R.string.error_empty_name)
-            isValid = false
-        } else {
-            textInputLayoutName.error = null
+            nameInputLayout.error = getString(R.string.error_empty_name)
+            return false
         }
+        nameInputLayout.error = null
 
         if (id.isEmpty()) {
-            textInputLayoutId.error = getString(R.string.error_empty_id)
-            isValid = false
-        } else if (id != originalStudentId && StudentRepository.exists(id)) {
-            textInputLayoutId.error = getString(R.string.error_duplicate_id)
-            isValid = false
-        } else {
-            textInputLayoutId.error = null
+            idInputLayout.error = getString(R.string.error_empty_id)
+            return false
         }
+        if (id != originalStudentId && StudentRepository.exists(id)) {
+            idInputLayout.error = getString(R.string.error_duplicate_id)
+            return false
+        }
+        idInputLayout.error = null
 
-        return isValid
+        return true
     }
 
     private fun saveStudent() {
@@ -216,44 +194,25 @@ class EditStudentFragment : Fragment() {
             isChecked = checkBoxChecked.isChecked,
             birthDate = editTextBirthDate.text.toString().trim(),
             birthTime = editTextBirthTime.text.toString().trim(),
-            avatarResId = originalStudent?.avatarResId ?: R.drawable.ic_student_avatar
+            avatarResId = originalStudent!!.avatarResId
         )
 
-        originalStudentId?.let { oldId ->
-            StudentRepository.update(oldId, updatedStudent)
-        }
+        StudentRepository.update(originalStudentId!!, updatedStudent)
 
-        showSuccessDialog()
-    }
-
-    private fun showSuccessDialog() {
-        AlertDialog.Builder(requireContext())
-            .setTitle(R.string.success)
-            .setMessage(R.string.student_saved_successfully)
-            .setPositiveButton(R.string.ok) { _, _ ->
-                findNavController().popBackStack()
-            }
-            .setCancelable(false)
-            .show()
+        Toast.makeText(requireContext(), "Student updated", Toast.LENGTH_SHORT).show()
+        findNavController().popBackStack()
     }
 
     private fun showDeleteConfirmation() {
         AlertDialog.Builder(requireContext())
-            .setTitle(R.string.delete_confirmation_title)
+            .setTitle("Delete student?")
             .setMessage(R.string.delete_confirmation_message)
-            .setPositiveButton(R.string.delete) { _, _ ->
-                deleteStudent()
+            .setPositiveButton("Delete") { _, _ ->
+                StudentRepository.delete(originalStudentId!!)
+                // TODO: maybe add undo with snackbar
+                findNavController().popBackStack(R.id.studentsListFragment, false)
             }
-            .setNegativeButton(R.string.cancel, null)
+            .setNegativeButton("Cancel", null)
             .show()
-    }
-
-    private fun deleteStudent() {
-        originalStudentId?.let { id ->
-            StudentRepository.delete(id)
-        }
-
-        // Navigate back to the students list (pop back through details)
-        findNavController().popBackStack(R.id.studentsListFragment, false)
     }
 }

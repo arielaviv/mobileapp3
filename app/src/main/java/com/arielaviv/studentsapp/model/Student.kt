@@ -8,7 +8,7 @@ data class Student(
     var phone: String,
     var address: String,
     var isChecked: Boolean = false,
-    var birthDate: String = "",  // Format: dd/MM/yyyy
-    var birthTime: String = "",  // Format: HH:mm
+    var birthDate: String = "",  // dd/MM/yyyy
+    var birthTime: String = "",
     val avatarResId: Int = R.drawable.ic_student_avatar
 )

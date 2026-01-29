@@ -23,10 +23,7 @@ object StudentRepository {
     }
 
     fun toggleChecked(id: String) {
-        val student = students.find { it.id == id }
-        student?.let {
-            it.isChecked = !it.isChecked
-        }
+        students.find { it.id == id }?.let { it.isChecked = !it.isChecked }
     }
 
     fun exists(id: String): Boolean = students.any { it.id == id }

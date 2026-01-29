@@ -14,7 +14,6 @@ import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.fragment.findNavController
-import com.arielaviv.studentsapp.model.Student
 import com.arielaviv.studentsapp.model.StudentRepository
 
 class StudentDetailsFragment : Fragment() {
@@ -43,17 +42,6 @@ class StudentDetailsFragment : Fragment() {
 
         studentId = arguments?.getString("studentId")
 
-        initViews(view)
-        setupMenu()
-        loadStudentData()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        loadStudentData()
-    }
-
-    private fun initViews(view: View) {
         imageViewAvatar = view.findViewById(R.id.imageViewAvatar)
         textViewName = view.findViewById(R.id.textViewName)
         textViewId = view.findViewById(R.id.textViewId)
@@ -62,6 +50,14 @@ class StudentDetailsFragment : Fragment() {
         textViewBirthDate = view.findViewById(R.id.textViewBirthDate)
         textViewBirthTime = view.findViewById(R.id.textViewBirthTime)
         textViewStatus = view.findViewById(R.id.textViewStatus)
+
+        setupMenu()
+        loadStudentData()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadStudentData()
     }
 
     private fun setupMenu() {
@@ -87,29 +83,19 @@ class StudentDetailsFragment : Fragment() {
     }
 
     private fun loadStudentData() {
-        val student = studentId?.let { StudentRepository.getById(it) }
-
+        val student = StudentRepository.getById(studentId ?: return)
         if (student == null) {
-            // Student not found, return to list
             findNavController().popBackStack()
             return
         }
 
-        displayStudent(student)
-    }
-
-    private fun displayStudent(student: Student) {
         imageViewAvatar.setImageResource(student.avatarResId)
         textViewName.text = student.name
         textViewId.text = student.id
-        textViewPhone.text = student.phone.ifEmpty { "-" }
-        textViewAddress.text = student.address.ifEmpty { "-" }
+        textViewPhone.text = if (student.phone.isNotEmpty()) student.phone else "-"
+        textViewAddress.text = if (student.address.isNotEmpty()) student.address else "-"
         textViewBirthDate.text = student.birthDate.ifEmpty { "-" }
         textViewBirthTime.text = student.birthTime.ifEmpty { "-" }
-        textViewStatus.text = if (student.isChecked) {
-            getString(R.string.checked_status)
-        } else {
-            getString(R.string.unchecked_status)
-        }
+        textViewStatus.text = if (student.isChecked) "Checked" else "Not checked"
     }
 }

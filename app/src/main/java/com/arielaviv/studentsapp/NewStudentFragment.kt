@@ -8,7 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.CheckBox
-import androidx.appcompat.app.AlertDialog
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.arielaviv.studentsapp.model.Student
@@ -81,45 +81,31 @@ class NewStudentFragment : Fragment() {
     }
 
     private fun showDatePicker() {
-        val calendar = Calendar.getInstance()
-        val year = calendar.get(Calendar.YEAR)
-        val month = calendar.get(Calendar.MONTH)
-        val day = calendar.get(Calendar.DAY_OF_MONTH)
+        val cal = Calendar.getInstance()
 
-        val datePickerDialog = DatePickerDialog(
+        DatePickerDialog(
             requireContext(),
-            { _, selectedYear, selectedMonth, selectedDay ->
-                val formattedDate = String.format(
-                    "%02d/%02d/%04d",
-                    selectedDay,
-                    selectedMonth + 1,
-                    selectedYear
-                )
-                editTextBirthDate.setText(formattedDate)
+            { _, y, m, d ->
+                editTextBirthDate.setText(String.format("%02d/%02d/%04d", d, m + 1, y))
             },
-            year,
-            month,
-            day
-        )
-        datePickerDialog.show()
+            cal.get(Calendar.YEAR),
+            cal.get(Calendar.MONTH),
+            cal.get(Calendar.DAY_OF_MONTH)
+        ).show()
     }
 
     private fun showTimePicker() {
-        val calendar = Calendar.getInstance()
-        val hour = calendar.get(Calendar.HOUR_OF_DAY)
-        val minute = calendar.get(Calendar.MINUTE)
+        val cal = Calendar.getInstance()
 
-        val timePickerDialog = TimePickerDialog(
+        TimePickerDialog(
             requireContext(),
-            { _, selectedHour, selectedMinute ->
-                val formattedTime = String.format("%02d:%02d", selectedHour, selectedMinute)
-                editTextBirthTime.setText(formattedTime)
+            { _, h, m ->
+                editTextBirthTime.setText(String.format("%02d:%02d", h, m))
             },
-            hour,
-            minute,
+            cal.get(Calendar.HOUR_OF_DAY),
+            cal.get(Calendar.MINUTE),
             true
-        )
-        timePickerDialog.show()
+        ).show()
     }
 
     private fun validateInput(): Boolean {
@@ -129,7 +115,7 @@ class NewStudentFragment : Fragment() {
         val id = editTextId.text.toString().trim()
 
         if (name.isEmpty()) {
-            textInputLayoutName.error = getString(R.string.error_empty_name)
+            textInputLayoutName.error = "Name is required"
             isValid = false
         } else {
             textInputLayoutName.error = null
@@ -155,22 +141,12 @@ class NewStudentFragment : Fragment() {
             phone = editTextPhone.text.toString().trim(),
             address = editTextAddress.text.toString().trim(),
             isChecked = checkBoxChecked.isChecked,
-            birthDate = editTextBirthDate.text.toString().trim(),
-            birthTime = editTextBirthTime.text.toString().trim()
+            birthDate = editTextBirthDate.text.toString(),
+            birthTime = editTextBirthTime.text.toString()
         )
 
         StudentRepository.add(student)
-        showSuccessDialog()
-    }
-
-    private fun showSuccessDialog() {
-        AlertDialog.Builder(requireContext())
-            .setTitle(R.string.success)
-            .setMessage(R.string.student_saved_successfully)
-            .setPositiveButton(R.string.ok) { _, _ ->
-                findNavController().popBackStack()
-            }
-            .setCancelable(false)
-            .show()
+        Toast.makeText(requireContext(), "Student added", Toast.LENGTH_SHORT).show()
+        findNavController().popBackStack()
     }
 }

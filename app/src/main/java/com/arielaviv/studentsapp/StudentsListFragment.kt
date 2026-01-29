@@ -33,16 +33,6 @@ class StudentsListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        setupRecyclerView(view)
-        setupMenu()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        refreshList()
-    }
-
-    private fun setupRecyclerView(view: View) {
         recyclerView = view.findViewById(R.id.recyclerViewStudents)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
@@ -59,8 +49,15 @@ class StudentsListFragment : Fragment() {
                 StudentRepository.toggleChecked(student.id)
             }
         )
-
         recyclerView.adapter = adapter
+
+        // TODO: add empty state view when list is empty
+        setupMenu()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        adapter.updateStudents(StudentRepository.getAll())
     }
 
     private fun setupMenu() {
@@ -81,9 +78,5 @@ class StudentsListFragment : Fragment() {
                 }
             }
         }, viewLifecycleOwner, Lifecycle.State.RESUMED)
-    }
-
-    private fun refreshList() {
-        adapter.updateStudents(StudentRepository.getAll())
     }
 }
